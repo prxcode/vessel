@@ -1,0 +1,59 @@
+
+package com.vessel.model;
+
+import com.vessel.Kernel.ExecutionResult;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.time.LocalDateTime;
+
+public class NotebookCell {
+
+    private final String id = UUID.randomUUID().toString();
+    private CellType cellType;
+    private String content;
+    private int executionCount = 0;
+    private ExecutionResult executionResult;
+    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime lastModifiedAt = LocalDateTime.now();
+    private boolean markdownPreviewOn = false;
+
+    public String getId() { return id; }
+    public CellType getType() { return cellType; }
+    public void setType(CellType type) { this.cellType = type; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) {
+        this.content = content;
+        this.lastModifiedAt = LocalDateTime.now();
+    }
+
+    public ExecutionResult getOutput() { return executionResult; }
+    // public void addOutput( NotebookCell.Output.Type type, String text){ outputs.add(new NotebookCell.Output(type, text)); }
+    // Removes old output before running again for the same cell.
+    // public void clearOutputs(){ outputs.clear(); }
+
+    // temp debug method cuz im too dumb to use logs :(
+    public void dumpContent(){
+        System.out.println("Notebook Cell Type: " + cellType);
+        System.out.println("Notebook Cell Content: " + content);
+        System.out.println("Notebook Cell Created At: " + createdAt);
+        System.out.println("Notebook Cell Last Modified At: " + lastModifiedAt);
+        System.out.println("Notebook Cell Execution Count: " + executionCount);
+    }
+
+    public void setExecutionResult(ExecutionResult executionResult) {
+        this.executionResult = executionResult;
+    }
+    public ExecutionResult getExecutionResult() { return executionResult; }
+    public int getExecutionCount() { return executionCount; }
+    public void incrementExecutionCount() { executionCount++; }
+
+    public boolean isMarkdownPreviewOn() {
+        return markdownPreviewOn;
+    }
+
+    public void setMarkdownPreviewOn(boolean markdownPreviewOn) {
+        this.markdownPreviewOn = markdownPreviewOn;
+    }
+}

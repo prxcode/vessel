@@ -1,0 +1,428 @@
+/* The .root selector targets the base container of the entire scene graph. */
+.root {
+    -fx-background-color: #f5f5f5;
+    -fx-text-fill: #000000;
+    -fx-font-family: "Segoe UI", "Tahoma", "Arial";
+}
+
+/* Base Label and Icon Styling */
+.label {
+    -fx-text-fill: #000000;
+}
+
+.font-icon {
+    -fx-fill: black;
+}
+/* scrollbar styling*/
+.scroll-bar {
+    -fx-background-color: transparent;
+    -fx-opacity: 0.85;
+}
+.scroll-bar .track {
+    -fx-background-color: #E8E8E8;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #AAAAAA;
+    -fx-background-insets: 0;
+    -fx-background-radius: 4px;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: #888888;
+}
+.scroll-bar:vertical {
+    -fx-pref-width: 8px;
+    -fx-max-width: 8px;
+}
+
+/* --- Header (MenuBar & ToolBar) Styling --- */
+.menu-bar,
+.tool-bar {
+    -fx-background-color: #e8ecec;
+}
+
+.menu-bar .label {
+    -fx-text-fill: black;
+}
+
+/* --- Menu Dropdowns (Context Menus) --- */
+.menu-bar .context-menu {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #bfbfbf;
+}
+
+.menu-item .label {
+    -fx-text-fill: #000000;
+}
+
+.menu-item:hover {
+    -fx-background-color: #cbe4ff;
+}
+
+.menu-item:hover .label {
+    -fx-text-fill: #000000;
+}
+
+.menu-item .separator {
+    -fx-background-color: #cccccc;
+}
+
+/* --- Buttons Styling --- */
+.button {
+    -fx-background-color: #d6d6d6;
+    -fx-text-fill: #000000;
+    -fx-border-color: transparent;
+}
+
+.button:hover {
+    -fx-background-color: #c8c8c8;
+}
+
+/* ============================
+   CHOICEBOX DROPDOWN
+   ============================ */
+.choice-box .context-menu {
+    -fx-background-color: #ffffff;
+    /* light dropdown */
+    -fx-border-color: #bfbfbf;
+    -fx-min-width: 120;
+}
+
+.choice-box .menu-item .label {
+    -fx-text-fill: #000000;
+}
+
+.choice-box .menu-item:hover {
+    -fx-background-color: #cbe4ff;
+}
+
+.choice-box .menu-item:hover .label {
+    -fx-text-fill: #000000;
+}
+
+.choice-box {
+    -fx-background-color: #d6d6d6;
+    -fx-mark-color: black;
+    -fx-min-width: 120;
+}
+
+.choice-box .label {
+    -fx-text-fill: #000000;
+}
+
+/* --- Center Content Area (ScrollPane & Code Cells) --- */
+.scroll-pane {
+    -fx-background-color: #f5f5f5;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: #f5f5f5;
+}
+
+#codeCellContainer {
+    -fx-background-color: #f5f5f5;
+}
+
+/* TextArea / TextField (code editor-like) */
+.text-area,
+.text-field {
+    -fx-background-color: #ffffff;
+    -fx-control-inner-background: #ffffff;
+    -fx-text-fill: #1e1e1e;
+    -fx-font-family: 'Consolas', 'DejaVu Sans Mono', 'Courier New', monospace;
+    -fx-font-size: 14px;
+    -fx-border-color: #c0c0c0;
+    -fx-highlight-fill: #87b7ff;
+    -fx-highlight-text-fill: #000000;
+}
+
+/* --- CodeArea styling (syntax highlighting) --- */
+.code-area {
+    -fx-background-color: #ffffff;
+    -fx-font-family: 'Consolas', 'DejaVu Sans Mono', 'Courier New', monospace;
+    -fx-font-size: 15px;
+    -fx-highlight-fill: #87b7ff;
+    -fx-highlight-text-fill: #000000;
+    -fx-min-height: 120px;
+    -fx-padding: 10 12 10 5;
+}
+
+.code-area .caret {
+    -fx-stroke: #000000;
+}
+
+.lineno {
+    -fx-text-fill: #464862;
+    -fx-border-color: transparent #141520 transparent transparent;
+    -fx-padding: 0 8 0 0;
+    -fx-border-width: 0 1 0 0;
+    -fx-min-width: 36px;
+    -fx-alignment: CENTER_RIGHT;
+}
+
+.line-gutter {
+    -fx-background-color: #ffffff;
+    -fx-padding: 0 12 0 0;
+}
+
+.prompt-label {
+    -fx-text-fill: #555555;
+    -fx-font-family: 'Consolas', 'Fira Mono', 'Courier New', monospace;
+    -fx-font-size: 16px;
+}
+
+/* Syntax Highlighting */
+.keyword {
+    -fx-fill: #0033b3;
+    -fx-font-weight: bold;
+}
+
+.comment {
+    -fx-fill: #8c8c8c;
+    -fx-font-style: italic;
+}
+
+.string {
+    -fx-fill: #067d17;
+}
+
+.char {
+    -fx-fill: #067d17;
+}
+
+.number {
+    -fx-fill: #1750eb;
+}
+
+.paren,
+.brace,
+.bracket {
+    -fx-fill: #000000;
+}
+
+.semicolon {
+    -fx-fill: #000000;
+}
+
+.code-area .plain {
+    -fx-fill: #1e1e1e;
+}
+
+/* --- Markdown Syntax Highlighting --- */
+
+.md-heading { -fx-fill: #005f9e; -fx-font-weight: bold; }
+.md-bold    { -fx-fill: #b35a00; -fx-font-weight: bold; }
+.md-italic  { -fx-fill: #b35a00; -fx-font-style: italic; }
+.md-code    {-fx-fill: #067500;}
+.md-link    { -fx-fill: #1750eb; -fx-underline: true; }
+.md-strike { -fx-fill: #777777; -fx-strikethrough: true; }
+.md-ulist   { -fx-fill: #6a1b9a; }
+.md-olist   { -fx-fill: #b26a00; }
+
+.md-quote   { -fx-fill: #555555; -fx-font-style: italic; }
+
+/* --- Markdown WebView preview box --- */
+.web-view.markdown-preview {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #c0c0c0;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.editor-stack {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #c0c0c0;
+    -fx-border-width: 1.5px;
+    -fx-background-radius: 4;
+    -fx-padding: 0;
+}
+
+.preview-loading-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.35);
+    -fx-alignment: CENTER;
+}
+
+.preview-loading-overlay .preview-loading-box {
+    -fx-alignment: CENTER;
+    -fx-padding: 6 10 6 10;
+}
+
+.preview-loading-overlay .output-spinner {
+    -fx-icon-size: 30;
+}
+
+.preview-loading-overlay .output-label-loading {
+    -fx-font-size: 29px;
+}
+
+/* --- CodeCell output --- */
+.output-area {
+    -fx-border-width: 0 1.5px 1.5px 1.5px;
+    -fx-border-color: transparent #c0c0c0 #c0c0c0 #c0c0c0;
+    -fx-background-color: #fafafa;
+    -fx-padding: 8 14 10 14;
+    -fx-font-family: 'Consolas', 'DejaVu Sans Mono', 'Courier New', monospace;
+    -fx-font-size: 13px;
+    -fx-min-height: 0px;
+    -fx-pref-height: -1;
+    -fx-effect: null;
+}
+
+/* for errors */
+.output-area .label.output-label {
+    -fx-font-size: 15px;
+    -fx-font-family: 'Consolas';
+    -fx-text-fill: #d32f2f;
+}
+
+/* for “(no output)” */
+.output-area .label.output-label-muted {
+    -fx-text-fill: #6f6f7a;
+}
+
+/* for “Executing...” */
+.output-area .label.output-label-loading {
+    -fx-text-fill: #777777;
+}
+
+/* Read-only output */
+.read-only-output {
+    -fx-background-color: transparent;
+    -fx-text-fill: #333333;
+    -fx-border-width: 0;
+    -fx-font-family: 'Consolas', 'DejaVu Sans Mono', 'Courier New', monospace;
+    -fx-font-size: 13px;
+    -fx-control-inner-background: transparent;
+    -fx-highlight-fill: #c0c0c0;
+    -fx-highlight-text-fill: black;
+}
+
+/* Spinner styling */
+.output-spinner {
+    -fx-fill: #333333;
+    -fx-padding: 0 8 0 0;
+}
+/* 1. Main Dialog Background (Lightest Shade) */
+.dialog-pane {
+    -fx-background-color: #f9f9f9; 
+    -fx-text-fill: #333333;
+}
+
+/* 2. Header Panel (Slightly Lighter Shade at the Top - for subtle distinction) */
+.dialog-pane .header-panel {
+    -fx-background-color: #ffffff; 
+    -fx-text-fill: #333333;
+    -fx-border-width: 0;
+    -fx-padding: 10 10 0 10;
+    -fx-effect: none;
+}
+
+/* 3. Content Area (Match the main dialog background with slight padding) */
+.dialog-pane .content {
+    -fx-background-color: #f9f9f9; 
+    -fx-text-fill: #333333;
+    -fx-padding: 0 0 0 0; 
+}
+
+/* 4. Button Bar Area (Match main dialog background, no borders) */
+.dialog-pane .button-bar {
+    -fx-background-color: #f9f9f9;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0 10 10 0;
+}
+
+/* 5. Target internal container of the ButtonBar to remove padding */
+.dialog-pane > .button-bar > .container {
+    -fx-padding: 0;
+}
+
+/* 6. Remove separator border/region above buttons */
+.dialog-pane .button-bar .border {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+}
+
+/* --- Other necessary styles --- */
+
+.dialog-pane .header-text {
+    -fx-fill: #333333;
+    -fx-text-fill: #333333;
+}
+
+.dialog-pane .graphic-container {
+    -fx-background-color: transparent;
+}
+
+.button,
+.toggle-button {
+    -fx-background-color: #e1e1e1;
+    -fx-text-fill: #333333;
+    -fx-border-color: transparent;
+    -fx-padding: 2 6 2 6;
+}
+
+.toolbar-button {
+    -fx-icon-size: 15;
+}
+
+.button:hover,
+.toggle-button:hover {
+    -fx-background-color: #cfcfcf;
+}
+
+.toggle-button:selected {
+    -fx-background-color: #0045ff;
+}
+
+.toggle-button:selected .font-icon {
+    -fx-background-color: #0045ff;
+    -fx-fill: #ffffff;
+}
+
+/* Styling for the Execution Count Label - Light Mode */
+.execution-count-label {
+    -fx-font-size: 1.5em;
+
+    /* Text color for light background */
+    -fx-text-fill: #666666; 
+
+    /* Center it vertically for better alignment with the buttons */
+    -fx-alignment: CENTER;
+
+    /* Add padding/margin to give it more visual presence */
+    -fx-padding: 3 10 3 10; 
+}
+
+/* Container for controls (like buttons + execution count) */
+.controlsContainer {
+    -fx-alignment: CENTER_LEFT;
+    -fx-fill-height: true;
+    -fx-spacing: 8;
+}
+
+.execution-cancelled {
+    -fx-text-fill: #cd681e;
+    -fx-font-size: 14px;
+    -fx-font-family: 'Fira Mono', 'Consolas', monospace;
+}
+
+.notebook-name {
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+    -fx-padding: 0 10 0 10;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+}
+
+.notebook-name-field {
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+    -fx-alignment: center;
+    -fx-padding: 4 10 4 10;
+}

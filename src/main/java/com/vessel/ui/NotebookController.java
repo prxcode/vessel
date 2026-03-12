@@ -1,0 +1,379 @@
+package com.vessel.ui;
+import com.vessel.Kernel.NotebookEngine;
+import com.vessel.model.CellType;
+import com.vessel.model.Notebook;
+import com.vessel.model.NotebookCell;
+import com.vessel.persistence.NotebookPersistence;
+import javafx.animation.FadeTransition;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML; // methods linked with FXML basically all those we wrote in Notebook.fxml file those fx:id, is pulled here with this
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene; // UI scene
+import javafx.scene.control.*; // buttons, labels, textarea, ChoiceBox
+import javafx.scene.layout.*; // VBox, HBox, Priority, Insets
+import javafx.scene.web.WebView;
+import javafx.stage.FileChooser; // For opening/saving project files
+import javafx.scene.control.ToolBar;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
+
+import java.io.*; // reading and writing project files
+import javafx.concurrent.Task;
+
+import java.awt.Desktop;
+import java.net.URI;
+
+public class NotebookController {
+    public StackPane notebookNameContainer;
+    // these are those fxml elements labelled via fx:id in main.fxml file
+    @FXML private VBox codeCellContainer; // that blocks containers made where user actually writes
+    @FXML private ChoiceBox<CellType> cellLanguage; // dropdown with 3 lang choices
+    @FXML private Label javaVersionLabel; // displays java version of the user in the toolbar
+    @FXML private Menu insertMenu;
+    @FXML private ToolBar mainToolbar;
+    @FXML private Label notebookNameLabel;
+    private String currentNotebookName = "Untitled Notebook"; // Data storage for the name
+    //    private boolean darkMode = false; // default theme is light mode
+    private SystemThemeDetector.Theme theme = SystemThemeDetector.getSystemTheme();
+    private Scene scene; // reference to the scene in Main.java so we can modify scene, here also
+    private final NotebookPersistence persistence = new NotebookPersistence();
+
+    private Notebook currentNotebook;
+
+    // im purely putting this for better performance
+    private static boolean markdownEngineWarmedUp = false;
+
+    private void warmupMarkdownEngine() {
+        if (markdownEngineWarmedUp) return;
+        markdownEngineWarmedUp = true;
+
+        WebView dummy = new WebView();
+        dummy.getEngine().loadContent("<html><body>warmup</body></html>");
+    }
+
+    // Pass scene reference from Main.java
+    public void setScene(Scene scene) { // detects and adds system theme stylesheet
+        this.scene = scene;
+        // Set initial theme
+        scene.getStylesheets().add(getClass().getResource((theme == SystemThemeDetector.Theme.LIGHT ? "/light.css" : "/dark.css")).toExternalForm());
+    }
+
+    @FXML
+    private void initialize() {// called automatically after FXML loads, sets default lang to Java Code, and shows java version in toolbar
+
+        // Notebook init.
+        currentNotebook = new Notebook("untitled"); //  hardcoded right now
+
+        cellLanguage.setItems(FXCollections.observableArrayList(CellType.values())); // Fill the choice dropbox thing
+        cellLanguage.setValue(CellType.CODE);
+        javaVersionLabel.setText("Java: " + System.getProperty("java.version"));
+
+        // Dynamically populating insert menu
+        for (CellType type : CellType.values()) {
+            MenuItem item = new MenuItem("Add " + type.toString()); // Will show something like "Add xyz"
+            item.setOnAction(e -> addCell(type));
+            insertMenu.getItems().add(item);
+        }
+
+        // Create default code cell on startup
+        addCell(CellType.CODE);
+        warmupMarkdownEngine();
+    }
+
+    // -------------------- Cell Creation --------------------
+
+    // it creates a new cell container with proper formatting and light border
+    private void addCell(CellType initialType) {
+        NotebookCell cellModel = new NotebookCell();
+        cellModel.setType(initialType);
+        currentNotebook.addCell(cellModel);   // <-- IMPORTANT (this was missing)
+        codeCellContainer.getChildren().add(createCellUI(initialType, cellModel));
+    }
+
+    // Parameterless overloading (used by .fxml files)
+    @FXML
+    private void addCell() {
+        addCell(cellLanguage.getValue());
+    }
+
+    // Factory method that dumps out the VBox (div) housing the code cell
+    private Pane createCellUI(CellType type, NotebookCell cellModel) {
+        try {
+            final String fxml = (type == CellType.CODE) ? "/CodeCell.fxml" : "/TextCell.fxml";
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            Pane cell = loader.load();
+
+            GenericCellController controller = loader.getController();
+            if (controller instanceof CodeCellController codeController) {
+                codeController.setEngine(currentNotebook.getEngine());
+            }
+            controller.setNotebookController(this);
+            controller.setNotebookCell(cellModel); // Pass cellModel object to the controller
+            controller.setParentContainer(codeCellContainer); // so Delete button can remove this cell
+            controller.setRoot(cell); // pass root for removal
+            controller.setCellType(type); //Init language
+
+            cell.setUserData(controller); // Bind the controller to the physical cell VBox/HBox itself
+            return cell;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void switchCellType(GenericCellController oldController, CellType newType) {
+        if (oldController == null) return;
+
+        int caretPos = oldController.getCaretPosition();
+        IndexRange sel = oldController.getSelection();
+
+        NotebookCell model = oldController.getNotebookCell();
+        if (model == null) return;
+
+        model.setType(newType);
+
+        Pane oldRoot = (Pane) oldController.getRoot();
+        if (oldRoot == null) return;
+
+        int index = codeCellContainer.getChildren().indexOf(oldRoot);
+        if (index < 0) return;
+
+        Pane newRoot = createCellUI(newType, model);
+        if (newRoot == null) return;
+
+        GenericCellController newController = (GenericCellController) newRoot.getUserData();
+
+        newController.restoreCaret(caretPos, sel);
+
+        newRoot.setOpacity(0);
+
+        var fadeOut = new FadeTransition(javafx.util.Duration.millis(250), oldRoot);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+
+        fadeOut.setOnFinished(e -> {
+            codeCellContainer.getChildren().set(index, newRoot);
+
+            var fadeIn = new FadeTransition(javafx.util.Duration.millis(250), newRoot);
+            fadeIn.setFromValue(0.0);
+            fadeIn.setToValue(1.0);
+            fadeIn.play();
+        });
+
+        fadeOut.play();
+    }
+
+    private void syncModelFromUI() {
+        currentNotebook.getCells().clear();
+        for (var node : codeCellContainer.getChildren()) {
+            if (node instanceof Pane cellBox) {
+                // retrieve the controller for this cell
+                var controller = (GenericCellController) cellBox.getUserData();
+                NotebookCell cell = controller.getNotebookCell();
+                currentNotebook.addCell(cell);
+            }
+        }
+    }
+
+    // -------------------- Toolbar Actions --------------------
+    // NOTE: NEED TO ADD LOGIC FOR EACH BUTTON!
+    @FXML private void cutCell() { System.out.println("Cut cell"); }
+    @FXML private void copyCell() { System.out.println("Copy cell"); }
+    @FXML private void pasteCell() { System.out.println("Paste cell"); }
+    @FXML private void moveUpCell() { System.out.println("Move cell up"); }
+    @FXML private void moveDownCell() { System.out.println("Move cell down"); }
+    @FXML private void runCell() { System.out.println("Run all cells"); }
+    @FXML private void pauseCell() { System.out.println("Pause all cells"); }
+    @FXML private void refreshCell() { System.out.println("Refresh all cells"); }
+
+    // -------------------- File Actions --------------------
+    // Saving project to system
+    @FXML
+    private void saveProject() {
+        // sync UI → model
+        syncModelFromUI();
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Notebook");
+        // open in /notebooks by default
+        fileChooser.setInitialDirectory(new File("notebooks"));
+        fileChooser.setInitialFileName(currentNotebook.getName() + ".json");
+        // allow only json files
+        fileChooser.getExtensionFilters()
+                .add(new FileChooser.ExtensionFilter("Vessel Notebook (*.json)", "*.json"));
+        File file = fileChooser.showSaveDialog(codeCellContainer.getScene().getWindow());
+        if (file == null) return; // user canceled
+
+        // wrap save logic in Task
+        Task<Boolean> saveTask = new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+                return persistence.saveToPath(currentNotebook, file.getAbsolutePath());
+            }
+        };
+
+        saveTask.setOnSucceeded(e -> System.out.println("save done!"));
+        saveTask.setOnFailed(e -> System.out.println("save failed."));
+
+        new Thread(saveTask).start();
+    }
+
+    // opens already existing project
+    @FXML
+    private void openProject() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open Notebook");
+        fileChooser.setInitialDirectory(new File("notebooks"));
+        fileChooser.getExtensionFilters()
+                .add(new FileChooser.ExtensionFilter("Vessel Notebook (*.json)", "*.json"));
+        File file = fileChooser.showOpenDialog(codeCellContainer.getScene().getWindow());
+        if (file == null) return;
+        Notebook loaded = persistence.loadFromPath(file.getAbsolutePath());
+        if (loaded != null) {
+            if (currentNotebook != null) {
+                currentNotebook.shutdownEngine();
+            }
+            currentNotebook = loaded;
+            currentNotebook.initEngineIfNull();
+            renderNotebook();
+
+            currentNotebookName = currentNotebook.getName();
+            notebookNameLabel.setText(currentNotebookName);
+            System.out.println("loaded ok");
+        } else {
+            System.out.println("load failed");
+        }
+    }
+
+    // clears ui and rebuilds all cells from the loaded notebook model
+    private void renderNotebook() {
+        codeCellContainer.getChildren().clear();
+        for (NotebookCell cell : currentNotebook.getCells()) {
+            codeCellContainer.getChildren().add(createCellUI(cell.getType(), cell));
+        }
+    }
+
+    // -------------------- Menu Actions --------------------
+    // NOTE: NEED TO ADD LOGIC FOR EACH BUTTON!
+    @FXML private void exportPDF() { System.out.println("Export PDF"); }
+    @FXML private void undoAction() { System.out.println("Undo"); }
+    @FXML private void redoAction() { System.out.println("Redo"); }
+    @FXML private void toggleToolbar() { System.out.println("Toggle Toolbar"); }
+    @FXML private void zoomIn() { System.out.println("Zoom In"); }
+    @FXML private void zoomOut() { System.out.println("Zoom Out"); }
+
+    @FXML private void showAbout() {
+        try{
+            Desktop desktop = Desktop.getDesktop();
+            desktop.browse( new URI("https://github.com/Pratham71/Vessel") );
+        } catch (Exception e){
+            e.toString();
+        }
+    }
+
+    @FXML
+    private void newNotebook() {
+        codeCellContainer.getChildren().clear();
+
+        currentNotebookName = "Untitled Notebook";
+        notebookNameLabel.setText(currentNotebookName);
+
+        addCell();
+    }
+    // -------------------- Helpers --------------------
+    // simple method to toggle theme
+    @FXML
+    private void toggleTheme() {
+        if (scene == null) return;
+
+        scene.getStylesheets().clear();
+        if (theme == SystemThemeDetector.Theme.DARK) {
+            scene.getStylesheets().add(getClass().getResource("/light.css").toExternalForm());
+            theme = SystemThemeDetector.Theme.LIGHT;
+        } else {
+            scene.getStylesheets().add(getClass().getResource("/dark.css").toExternalForm());
+            theme = SystemThemeDetector.Theme.DARK;
+        }
+
+        // refresh markdown previews in all text cells
+        for (var node : codeCellContainer.getChildren()) {
+            if (node.getUserData() instanceof TextCellController textCtrl) {
+                textCtrl.refreshPreview();
+            }
+        }
+    }
+    @FXML
+    private void editNotebookName() {
+        TextField nameField = new TextField(currentNotebookName);
+        nameField.getStyleClass().add("notebook-name-field");
+
+        nameField.setMinWidth(150);
+        nameField.setMaxWidth(400);
+        nameField.setPrefWidth(Region.USE_COMPUTED_SIZE);
+
+        if (notebookNameContainer.getChildren().contains(notebookNameLabel)) {
+            notebookNameContainer.getChildren().clear();
+            notebookNameContainer.getChildren().add(nameField);
+            nameField.requestFocus();
+            nameField.selectAll();
+
+            nameField.setOnAction(e -> saveNotebookName(nameField));
+            nameField.focusedProperty().addListener((obs, oldVal, newVal) -> {
+                if (!newVal) saveNotebookName(nameField);
+            });
+        }
+    }
+
+    private void saveNotebookName(TextField field) {
+        String newName = field.getText().trim();
+        if (newName.isEmpty()) {
+            newName = "Untitled Notebook";
+        }
+        currentNotebookName = newName;
+        notebookNameLabel.setText(newName);
+        getCurrentNotebook().setName(newName);
+        if (notebookNameContainer.getChildren().contains(field)) {
+            notebookNameContainer.getChildren().clear();
+            notebookNameContainer.getChildren().add(notebookNameLabel);
+        }
+    }
+    //shell controls
+    @FXML
+    private void startShell() {
+        System.out.println("Shell: Starting JShell Engine...");
+        getCurrentNotebook().initEngineIfNull();
+        reattachEngineAll();
+    }
+
+    @FXML
+    private void shutdownShell() {
+        System.out.println("Shell: Shutting Down JShell Engine...");
+        getCurrentNotebook().shutdownEngine();
+    }
+    @FXML
+    private void restartShell() {
+        System.out.println("Shell: Restarting JShell Engine...");
+        getCurrentNotebook().shutdownEngine();
+        getCurrentNotebook().initEngineIfNull();
+        reattachEngineAll();
+        System.out.println("Shell: Engine restart complete. Cell controllers updated.");
+    }
+
+    private void reattachEngineAll() {
+        NotebookEngine newEngine = getCurrentNotebook().getEngine();
+        for (javafx.scene.Node node : codeCellContainer.getChildren()) {
+            Object controller = node.getUserData();
+            ((GenericCellController) controller).updateEngine(newEngine);
+        }
+    }
+
+    public Notebook getCurrentNotebook() {
+        return currentNotebook;
+    }
+
+    public SystemThemeDetector.Theme getTheme() {
+        return theme;
+    }
+}
